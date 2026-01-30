@@ -12,7 +12,7 @@ const products = [
         type: "prints",          
         showInGallery: true,     
         image: "assets/bassguitar.jpg",
-        description: '• 17" x 22"\n• Physical 300dpi print on 130lb cardstock\n• Print comes in the shape of the bass guitar\n\n• For local pickup, Message me on Instagram upon purchase.\n•U.S. domestic shipping only',
+        description: '• Limmited Stock\n\n• 17" x 22"\n• Physical 300dpi print on 130lb cardstock\n• Print comes in the shape of the bass guitar\n\n• For local pickup, Message me on Instagram upon purchase.\n•U.S. domestic shipping only',
         // IMPORTANT: Paste your Stripe PRICE ID here (starts with price_...)
         priceId: "price_1SvOYLDt4JcRGZdO9TBBrWoq" 
     },
