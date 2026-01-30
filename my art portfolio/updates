@@ -1,0 +1,38 @@
+How to use and update this
+
+
+
+Add Images:
+
+Put your guitar.jpg (5117x6600) into the assets folder.
+
+The code handles the resizing automatically so it looks good on the card, but when you click "View Full", it opens the full resolution in a new tab.
+
+
+
+Add New Products:
+
+Open script.js.
+
+Look at the products list at the very top.
+Copy the section between { ... }, and paste it again.
+
+Change the id (make it unique, like 3, 4, 5), change the title, price, and image path.
+
+Change type to either 'prints' or 'apparel' to make sure it shows up in the right category in the sidebar.
+
+
+
+Change Fonts:
+
+Go to styles.css.
+
+At the very top, under :root, change --main-font.
+
+If you want a different font, go to Google Fonts, select one, copy the <link> code into your HTML <head>, and update the CSS variable.
+
+
+
+Run the site:
+If you have the "Live Server" extension in VS Code (highly recommended), right-click index.html and click "Open with Live Server".
+Otherwise, just double-click the index.html file in your folder, and it will open in Chrome/Edge/Safari.
