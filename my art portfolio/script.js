@@ -13,7 +13,8 @@ const products = [
         showInGallery: true,     
         image: "assets/bassguitar.jpg",
         description: '• 17" x 22"\n• Physical 300dpi print on 130lb cardstock\n• Print comes in the shape of the bass guitar\n\n• For local pickup, Message me on Instagram upon purchase.\n•U.S. domestic shipping only',
-        priceId: "prod_TtAuENUI2R4vs1"
+        // IMPORTANT: Paste your Stripe PRICE ID here (starts with price_...)
+        priceId: "price_1SvOYLDt4JcRGZdO9TBBrWoq" 
     },
     {
         id: 2,
@@ -37,7 +38,8 @@ const products = [
         showInGallery: false,      
         image: "assets/testhat.png",
         description: "Test",
-        priceId: null
+        // IMPORTANT: Paste your Stripe PRICE ID here (starts with price_...)
+        priceId: "price_1Pw................"
     }
 ];
 
@@ -52,6 +54,17 @@ const shopSubmenu = document.getElementById('shop-submenu');
 
 // --- STARTUP ---
 window.onload = function () {
+    // Check if returning from Stripe (URL params)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'success') {
+        alert("Payment Successful! Thank you for your order.");
+        // Clean URL
+        window.history.replaceState({}, document.title, "/");
+    } else if (urlParams.get('status') === 'cancel') {
+        alert("Payment Canceled.");
+        window.history.replaceState({}, document.title, "/");
+    }
+
     renderMainGallery();
 };
 
@@ -161,7 +174,19 @@ function openProduct(id) {
     document.getElementById('p-price').innerText = item.price;
     document.getElementById('p-desc').innerText = item.description;
     const buyBtn = document.getElementById('p-buy-btn');
-    buyBtn.onclick = () => startCheckout(item);
+    
+    // Check if ID is present
+    if(item.priceId) {
+        buyBtn.innerText = "Purchase via Stripe";
+        buyBtn.onclick = () => startCheckout(item);
+        buyBtn.disabled = false;
+        buyBtn.style.opacity = "1";
+    } else {
+        buyBtn.innerText = "Not Available";
+        buyBtn.onclick = null;
+        buyBtn.disabled = true;
+        buyBtn.style.opacity = "0.5";
+    }
 
     window.scrollTo(0, 0);
 }
@@ -191,23 +216,40 @@ function toggleSidebar() {
 function toggleShopMenu() {
     shopSubmenu.classList.toggle('hidden-submenu');
 }
+
+// 5. STRIPE CHECKOUT
 async function startCheckout(item) {
-  try {
-    const res = await fetch('/.netlify/functions/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId: item.id })
-    });
+    const btn = document.getElementById('p-buy-btn');
+    const originalText = btn.innerText;
+    btn.innerText = "Loading...";
 
-    const data = await res.json();
+    try {
+        const res = await fetch('/.netlify/functions/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // Send the specific ID and the TYPE (prints need shipping)
+            body: JSON.stringify({ 
+                priceId: item.priceId,
+                productType: item.type
+            })
+        });
 
-    if (data.url) {
-      window.location.href = data.url; // redirect to Stripe
-    } else {
-      alert('Checkout failed. Please try again.');
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Request failed');
+        }
+
+        const data = await res.json();
+
+        if (data.url) {
+            window.location.href = data.url; 
+        } else {
+            alert('Checkout failed. Please try again.');
+            btn.innerText = originalText;
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Checkout error: ' + err.message);
+        btn.innerText = originalText;
     }
-  } catch (err) {
-    console.error(err);
-    alert('Checkout failed. Please try again.');
-  }
 }

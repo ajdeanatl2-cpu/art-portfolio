@@ -1,37 +1,39 @@
 // netlify/functions/create-checkout.js
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-// Map product IDs to Stripe price IDs
-const products = {
-  1: { priceId: 'price_YOUR_PRINT_PRICE_ID', type: 'prints' },
-  2: { priceId: 'price_YOUR_OTHER_PRICE_ID', type: 'apparel' },
-  3: { priceId: 'price_YOUR_HAT_PRICE_ID', type: 'apparel' }
-};
-
 exports.handler = async (event) => {
   try {
-    const { productId } = JSON.parse(event.body);
-    const product = products[productId];
+    // We receive the priceId and the type (prints/apparel) directly from the frontend
+    const { priceId, productType } = JSON.parse(event.body);
 
-    if (!product) {
-      return { statusCode: 400, body: 'Invalid product' };
+    if (!priceId) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing Price ID' }) };
     }
 
+    // Basic Configuration
     const sessionConfig = {
       mode: 'payment',
       line_items: [
-        { price: product.priceId, quantity: 1 }
+        { price: priceId, quantity: 1 }
       ],
-      success_url: 'https://yourdomain.com/success',
-      cancel_url: 'https://yourdomain.com/cancel'
+      // This automatically uses your site URL for the redirect
+      success_url: `${event.headers.origin}/?status=success`, 
+      cancel_url: `${event.headers.origin}/?status=cancel`
     };
 
-    // Only add shipping for prints
-    if (product.type === 'prints') {
+    // --- SHIPPING LOGIC ---
+    // Only add shipping options if the product type is 'prints'
+    if (productType === 'prints') {
       sessionConfig.shipping_address_collection = { allowed_countries: ['US'] };
+      
       sessionConfig.shipping_options = [
-        { shipping_rate: 'shr_STANDARD' },     // replace with your Stripe shipping rate ID
-        { shipping_rate: 'shr_LOCAL_PICKUP' } // replace with your local pickup shipping rate ID
+        // 1. YOUR STANDARD SHIPPING ($12)
+        // Go to Stripe > Products > Shipping Rates > Copy the ID (starts with shr_)
+        { shipping_rate: 'shr_1SvOjiDt4JcRGZdOGiRNvCU6' }, 
+
+        // 2. YOUR LOCAL PICKUP ($0)
+        // Go to Stripe > Products > Shipping Rates > Copy the ID (starts with shr_)
+        { shipping_rate: 'shr_1SvOl0Dt4JcRGZdOJYaklzfh' } 
       ];
     }
 
@@ -42,7 +44,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ url: session.url })
     };
   } catch (err) {
-    console.error(err);
-    return { statusCode: 500, body: JSON.stringify(err.message) };
+    console.error("Stripe Error:", err);
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
