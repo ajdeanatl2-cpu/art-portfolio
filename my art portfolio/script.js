@@ -1,20 +1,19 @@
 /* 
-    --- DATA CONFIGURATION --- 
-    Gallery and Shop are fully independent.
+    Data Config for items
 */
 
 const products = [
     {
         id: 1,
-        title: "Guitar Piece",
-        shopTitle: "Guitar Piece Print",
+        title: "Bass Guitar Piece",
+        shopTitle: "Bass Guitar Print",
         year: "2026",
-        price: "$20.00",
+        price: "$50.00",
         type: "prints",          
         showInGallery: true,     
-        image: "assets/guitar.jpg",
-        description: "A high-resolution digital print of an acoustic guitar. 5117x6600 dimensions.",
-        stripeLink: "https://stripe.com"
+        image: "assets/bassguitar.jpg",
+        description: '• 17" x 22"\n• Physical 300dpi print on 130lb cardstock\n• Print comes in the shape of the bass guitar\n\n• For local pickup, Message me on Instagram upon purchase.\n•U.S. domestic shipping only',
+        priceId: "prod_TtAuENUI2R4vs1"
     },
     {
         id: 2,
@@ -26,7 +25,7 @@ const products = [
         showInGallery: true,
         image: "assets/testgallery2.png",
         description: "Test",
-        stripeLink: null
+        priceId: null
     },
     {
         id: 3,
@@ -38,7 +37,7 @@ const products = [
         showInGallery: false,      
         image: "assets/testhat.png",
         description: "Test",
-        stripeLink: null
+        priceId: null
     }
 ];
 
@@ -161,7 +160,8 @@ function openProduct(id) {
     document.getElementById('p-title').innerText = item.shopTitle || item.title;
     document.getElementById('p-price').innerText = item.price;
     document.getElementById('p-desc').innerText = item.description;
-    document.getElementById('p-buy-link').href = item.stripeLink;
+    const buyBtn = document.getElementById('p-buy-btn');
+    buyBtn.onclick = () => startCheckout(item);
 
     window.scrollTo(0, 0);
 }
@@ -190,4 +190,24 @@ function toggleSidebar() {
 
 function toggleShopMenu() {
     shopSubmenu.classList.toggle('hidden-submenu');
+}
+async function startCheckout(item) {
+  try {
+    const res = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId: item.id })
+    });
+
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url; // redirect to Stripe
+    } else {
+      alert('Checkout failed. Please try again.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Checkout failed. Please try again.');
+  }
 }
